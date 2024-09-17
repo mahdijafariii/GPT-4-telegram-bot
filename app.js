@@ -47,27 +47,60 @@ bot.action("copilot",(ctx)=>{
             Markup.button.callback("creative","creative"),
             Markup.button.callback("balanced","balanced"),
         ]))})
+bot.hears("End Chat",(ctx)=>{
+    const userId = ctx.chat.id
+    Markup.removeKeyboard();
+    ctx.reply("I hope it was a good experience for you💓")
+    client.del(`user:${userId}:action`)
+    client.del(`user:${userId}:tones`)
+    ctx.reply("welcome to my bot dear ! " ,
+        Markup.inlineKeyboard([[
+            Markup.button.callback("3.5 Turbo", "Turbo"),
+            Markup.button.callback("GPT 4", "GPT4")],
+            [Markup.button.callback("Copilot","copilot")]
+        ]))
 
-bot.on("text", async (ctx)=>{
+})
+bot.hears("Continue",(ctx)=>{
+    Markup.removeKeyboard();
+    ctx.reply("I look forward to your next request😍")
+})
+
+bot.on("text", async (ctx)=> {
     const userText = ctx.text;
     const userId = ctx.chat.id;
-    const action  = await client.get(`user:${userId}:action`)
-    const tone  = await client.get(`user:${userId}:tones`)
+    const action = await client.get(`user:${userId}:action`)
+    const tone = await client.get(`user:${userId}:tones`)
 
-    ctx.reply("Your request is on processing😊")
+    if (action) {
+        ctx.reply("Your request is on processing😊")
 
-    if (action == "gpt3.5-turbo"){
-        const response = await axios.get(`${apiUrl}&action=${action}&q=`+encodeURIComponent(userText));
-        ctx.reply(response.data.result[0])
+        if (action == "gpt3.5-turbo") {
+            const response = await axios.get(`${apiUrl}&action=${action}&q=` + encodeURIComponent(userText));
+            ctx.reply(response.data.result[0])
+        } else if (action == "gpt4o") {
+            const response = await axios.get(`${apiUrl}&action=${action}&q=` + encodeURIComponent(userText) + `tones=${tone}`);
+            ctx.reply(response.data.result[0])
+        } else if (action == "copilot") {
+            const response = await axios.get(`${apiUrl}&action=${action}&q=` + encodeURIComponent(userText) + `tones=${tone}`);
+            ctx.reply(response.data.result[0].message)
+        }
+
+        ctx.reply("Your request has been successfully processed !🌿",
+            Markup.keyboard([
+                Markup.button.callback("End Chat"),
+                Markup.button.callback("Continue")]
+            ))
     }
-    else if (action == "gpt4o"){
-        const response = await axios.get(`${apiUrl}&action=${action}&q=`+encodeURIComponent(userText)+`tones=${tone}`);
-        ctx.reply(response.data.result[0])
-    }
-    else if (action == "copilot"){
-        const response = await axios.get(`${apiUrl}&action=${action}&q=`+encodeURIComponent(userText)+`tones=${tone}`);
-        ctx.reply(response.data.result[0].message)
+    else {
+        ctx.reply("welcome to my bot dear ! " ,
+            Markup.inlineKeyboard([[
+                Markup.button.callback("3.5 Turbo", "Turbo"),
+                Markup.button.callback("GPT 4", "GPT4")],
+                [Markup.button.callback("Copilot","copilot")]
+            ]))
     }
 })
+
 
 bot.launch();
