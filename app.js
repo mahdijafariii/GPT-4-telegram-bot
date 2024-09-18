@@ -50,39 +50,51 @@ bot.action("copilot", (ctx) => {
         ]))
 })
 
-bot.action("vip",(ctx)=>{
+bot.action("vip", (ctx) => {
     const chatId = ctx.chat.id;
-    ctx.editMessageText("For user this bot you can choose plan and buy it! " ,
+    ctx.editMessageText("For user this bot you can choose plan and buy it! ",
         Markup.inlineKeyboard([[
             Markup.button.callback("Buy 3.5 Turbo", "plan_Turbo"),
             Markup.button.callback("Buy GPT 4", "plan_GPT4")],
-            [Markup.button.callback("Buy Copilot","plan_copilot")],
-            [Markup.button.callback("Buy All engine🌿","plan_vip")]
+            [Markup.button.callback("Buy Copilot", "plan_copilot")],
+            [Markup.button.callback("Buy All engine🌿", "plan_vip")]
         ]))
 })
 
-bot.on('callback_query', async (ctx)=>{
+bot.on('callback_query', async (ctx) => {
     const text = ctx.update.callback_query.data
     const chatId = ctx.update.callback_query.from.id;
-    const user =await knex("users").where({chatId : chatId}).first();
-    const planArray = ["plan_Turbo" , "plan_GPT4", "plan_copilot" ,"plan_vip"]
-    const periodPlans = ["time_7" , "time_15", "time_30" ,"time_90"]
+    const user = await knex("users").where({chatId: chatId}).first();
+    const planArray = ["plan_Turbo", "plan_GPT4", "plan_copilot", "plan_vip"]
+    const periodPlans = ["time_7", "time_15", "time_30", "time_90"]
 
-    if (planArray.includes(text)){
-        await knex('orders').insert({user_id : user.id , plan : text.substring(5) , create_at : Math.floor(Date.now() / 1000)})
+    if (planArray.includes(text)) {
+        await knex('orders').insert({
+            user_id: user.id,
+            plan: text.substring(5),
+            create_at: Math.floor(Date.now() / 1000)
+        })
+        const plans = await knex("prices").where({plan : text.substring(5)})
+        const plan_7 = plans.find(plan => plan.period_time === "7")
+        const plan_15 = plans.find(plan => plan.period_time === "15")
+        const plan_30 = plans.find(plan => plan.period_time === "30")
+        const plan_90 = plans.find(plan => plan.period_time === "90")
+        actions.periodTimeSubscription(ctx,plan_7.price,plan_15.price,plan_30.price,plan_90.price);
+
     }
-    if (periodPlans.includes(text)){
-        await knex('orders').update({ period_plan : text.substring(5)}).where({ user_id: user.id }) .orderBy("id","DESC").limit(1)
-    }})
+    if (periodPlans.includes(text)) {
+        await knex('orders').update({period_plan: text.substring(5)}).where({user_id: user.id}).orderBy("id", "DESC").limit(1)
+    }
+})
 bot.hears("End Chat", (ctx) => {
     const userId = ctx.chat.id
-    ctx.reply("I hope it was a good experience for you💓",Markup.removeKeyboard())
+    ctx.reply("I hope it was a good experience for you💓", Markup.removeKeyboard())
     client.del(`user:${userId}:action`)
     client.del(`user:${userId}:tones`)
     actions.mainKeyboardMenu(ctx);
 })
 bot.hears("Continue", (ctx) => {
-    ctx.reply("I look forward to your next request😍",Markup.removeKeyboard())
+    ctx.reply("I look forward to your next request😍", Markup.removeKeyboard())
 })
 
 bot.on("text", async (ctx) => {
@@ -94,9 +106,8 @@ bot.on("text", async (ctx) => {
     if (action) {
         const freeCount = await dbAction.getFreeCount(ctx.chat.id);
         if (freeCount >= 5) {
-            ctx.reply("You can not use chat Gpt for free anymore ! you should buy vip.🍂",Markup.removeKeyboard())
-        }
-        else {
+            ctx.reply("You can not use chat Gpt for free anymore ! you should buy vip.🍂", Markup.removeKeyboard())
+        } else {
             await actions.processRequest(ctx, apiUrl, userText, action, tone)
             dbAction.incRequestCount(ctx.chat.id);
         }

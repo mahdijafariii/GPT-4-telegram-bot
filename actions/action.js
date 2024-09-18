@@ -9,11 +9,11 @@ const mainKeyboardMenu = (ctx)=>{
         ]))
 }
 
-const periodTimeSubscription = (ctx)=>{
-    ctx.reply("welcome to my bot dear ! " ,
+const periodTimeSubscription = (ctx,price_7,price_15,price_30,price_90)=>{
+    ctx.editMessageText("How many days subscription do you want? " ,
         Markup.inlineKeyboard([[
-            Markup.button.callback("7 days (10000)", "time_7"),Markup.button.callback("15 days (60000)", "time_15")],
-            [Markup.button.callback("30 days (110000)","time_30"),Markup.button.callback("90 days (300000)","time_90")],
+            Markup.button.callback(`7 days price : ${price_7}`, "time_7"),Markup.button.callback(`7 days price : ${price_15}`, "time_15")],
+            [Markup.button.callback(`30 days price : ${price_30}`,"time_30"),Markup.button.callback(`7 days price : ${price_90}`,"time_90")],
 
         ]))
 }
@@ -38,4 +38,4 @@ const processRequest = async (ctx,apiUrl,userText,action,tone = false)=>{
         ]).resize())
 }
 
-module.exports = {mainKeyboardMenu, processRequest}
+module.exports = {mainKeyboardMenu, processRequest ,periodTimeSubscription}
