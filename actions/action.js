@@ -1,6 +1,5 @@
 const {Markup} = require("telegraf");
 const axios = require("axios");
-const dbAction = require("./dbAction");
 
 const mainKeyboardMenu = (ctx)=>{
     ctx.reply("welcome to my bot dear ! " ,
@@ -11,7 +10,7 @@ const mainKeyboardMenu = (ctx)=>{
         ]))
 }
 
-const processRequest = async (ctx,apiUrl,userText,action,tone = false,dbAction)=>{
+const processRequest = async (ctx,apiUrl,userText,action,tone = false)=>{
     ctx.reply("Your request is on processing😊")
 
     if (action == "gpt3.5-turbo") {
@@ -24,7 +23,6 @@ const processRequest = async (ctx,apiUrl,userText,action,tone = false,dbAction)=
         const response = await axios.get(`${apiUrl}&action=${action}&q=` + encodeURIComponent(userText) + `tones=${tone}`);
         ctx.reply(response.data.result[0].message)
     }
-    await dbAction.incRequestCount(ctx.chat.id);
     ctx.reply("Your request has been successfully processed !🌿",
         Markup.keyboard([
             ['End Chat', 'Continue']
