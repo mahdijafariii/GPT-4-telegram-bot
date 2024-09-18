@@ -2,6 +2,7 @@ const {Telegraf, Markup} = require("telegraf");
 const bot = new Telegraf("7463854933:AAHuAacVYJwHSC0wyXIiY1pO8vndd0kB_HE");
 const apiToken = "156190:66a7dae19e627";
 const axios = require("axios")
+const knex = require("./config/db")
 const redis = require("redis")
 const apiUrl = `https://one-api.ir/chatgpt/?token=${apiToken}`
 const client = redis.createClient();
@@ -59,6 +60,20 @@ bot.action("vip",(ctx)=>{
             [Markup.button.callback("Buy All engine🌿","plan_vip")]
         ]))
 })
+
+bot.on('callback_query', async (ctx)=>{
+    const text = ctx.update.callback_query.data
+    const chatId = ctx.update.callback_query.from.id;
+    const user =await knex("users").where({chatId : chatId}).first();
+    const planArray = ["plan_Turbo" , "plan_GPT4", "plan_copilot" ,"plan_vip"]
+    const periodPlans = ["time_7" , "time_15", "time_30" ,"time_90"]
+
+    if (planArray.includes(text)){
+        await knex('orders').insert({user_id : user.id , plan : text.substring(5) , create_at : Math.floor(Date.now() / 1000)})
+    }
+    if (periodPlans.includes(text)){
+        await knex('orders').update({ period_plan : text.substring(5)}).where({ user_id: user.id }) .orderBy("id","DESC").limit(1)
+    }})
 bot.hears("End Chat", (ctx) => {
     const userId = ctx.chat.id
     ctx.reply("I hope it was a good experience for you💓",Markup.removeKeyboard())

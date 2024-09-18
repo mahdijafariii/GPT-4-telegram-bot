@@ -6,9 +6,18 @@ const mainKeyboardMenu = (ctx)=>{
         Markup.inlineKeyboard([[
             Markup.button.callback("3.5 Turbo", "Turbo"),Markup.button.callback("GPT 4", "GPT4")],
             [Markup.button.callback("Copilot","copilot"),Markup.button.callback("Buy VIP🌿","vip")],
+        ]))
+}
+
+const periodTimeSubscription = (ctx)=>{
+    ctx.reply("welcome to my bot dear ! " ,
+        Markup.inlineKeyboard([[
+            Markup.button.callback("7 days (10000)", "time_7"),Markup.button.callback("15 days (60000)", "time_15")],
+            [Markup.button.callback("30 days (110000)","time_30"),Markup.button.callback("90 days (300000)","time_90")],
 
         ]))
 }
+
 
 const processRequest = async (ctx,apiUrl,userText,action,tone = false)=>{
     ctx.reply("Your request is on processing😊")
