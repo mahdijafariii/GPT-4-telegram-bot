@@ -60,6 +60,21 @@ bot.action("vip", (ctx) => {
             [Markup.button.callback("Buy All engine🌿", "plan_vip")]
         ]))
 })
+bot.action("confirm_payment", async (ctx) => {
+    const user = await knex("users").where({chatId: ctx.chat.id}).first();
+    const lastOrder = await knex('orders').where({user_id: user.id}).orderBy("id", "DESC").first()
+    console.log(lastOrder.amount,lastOrder.id)
+    const request = await axios.post("https://gateway.zibal.ir/v1/request", {
+        merchant: "zibal",
+        amount: (lastOrder.amount * 10),
+        callbackUrl: "http://localhost:3030",
+        orderId: lastOrder.id
+    })
+    ctx.editMessageText("Click the payment button go to payment link 💵",
+        Markup.inlineKeyboard([
+            Markup.button.url(`Go To Payment Link ! `, `https://gateway.zibal.ir/start/${request.data.trackId}`),
+        ]))
+})
 
 bot.on('callback_query', async (ctx) => {
     const text = ctx.update.callback_query.data
@@ -74,18 +89,28 @@ bot.on('callback_query', async (ctx) => {
             plan: text.substring(5),
             create_at: Math.floor(Date.now() / 1000)
         })
-        const plans = await knex("prices").where({plan : text.substring(5)})
+        const plans = await knex("prices").where({plan: text.substring(5)})
         const plan_7 = plans.find(plan => plan.period_time === "7")
         const plan_15 = plans.find(plan => plan.period_time === "15")
         const plan_30 = plans.find(plan => plan.period_time === "30")
         const plan_90 = plans.find(plan => plan.period_time === "90")
-        actions.periodTimeSubscription(ctx,plan_7.price,plan_15.price,plan_30.price,plan_90.price);
+        actions.periodTimeSubscription(ctx, plan_7.price, plan_15.price, plan_30.price, plan_90.price);
 
     }
     if (periodPlans.includes(text)) {
-        await knex('orders').update({period_plan: text.substring(5)}).where({user_id: user.id}).orderBy("id", "DESC").limit(1)
+
+        const lastOrder = await knex('orders').where({user_id: user.id}).orderBy("id", "DESC").first()
+        const price_plan = await knex("prices").where({plan: lastOrder.plan, period_time: text.substring(5)}).first()
+
+        await knex('orders').update({
+            period_plan: text.substring(5),
+            amount: price_plan.price
+        }).where({user_id: user.id}).orderBy("id", "DESC").limit(1)
+        actions.paymentButton(ctx)
     }
 })
+
+
 bot.hears("End Chat", (ctx) => {
     const userId = ctx.chat.id
     ctx.reply("I hope it was a good experience for you💓", Markup.removeKeyboard())

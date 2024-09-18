@@ -18,6 +18,18 @@ const periodTimeSubscription = (ctx,price_7,price_15,price_30,price_90)=>{
         ]))
 }
 
+const paymentButton = (ctx)=>{
+    ctx.editMessageText("Click the payment button to purchase a subscription 💵" ,
+        Markup.inlineKeyboard([
+            Markup.button.callback(`Buy 💸`, "confirm_payment"),
+        ]))
+}
+
+const goToPaymentLink = (ctx, trackId)=>{
+
+}
+
+
 
 const processRequest = async (ctx,apiUrl,userText,action,tone = false)=>{
     ctx.reply("Your request is on processing😊")
@@ -38,4 +50,4 @@ const processRequest = async (ctx,apiUrl,userText,action,tone = false)=>{
         ]).resize())
 }
 
-module.exports = {mainKeyboardMenu, processRequest ,periodTimeSubscription}
+module.exports = {mainKeyboardMenu, processRequest ,periodTimeSubscription, paymentButton ,goToPaymentLink}
