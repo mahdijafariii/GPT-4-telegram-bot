@@ -15,14 +15,12 @@ connection.connect((err) => {
 });
 
 const registerUser = (chatId, name) => {
-    console.log(chatId,name)
-    connection.query(
-        `INSERT INTO users SET chatId = ?, name = ?`,
-        [chatId, name],
-        function (err, results) {
-            console.log(results);
+    connection.query(`SELECT * FROM users WHERE chatId = ?`,[chatId],function(err ,result){
+        if(!result.length){
+            connection.query(`INSERT INTO users SET chatId = ?, name = ?`, [chatId, name]);
         }
-    );
+    })
+
 }
 
 module.exports = {registerUser}
