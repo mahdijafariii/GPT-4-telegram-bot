@@ -49,8 +49,8 @@ bot.action("copilot",(ctx)=>{
         ]))})
 bot.hears("End Chat",(ctx)=>{
     const userId = ctx.chat.id
-    Markup.removeKeyboard();
     ctx.reply("I hope it was a good experience for you💓")
+    Markup.removeKeyboard();
     client.del(`user:${userId}:action`)
     client.del(`user:${userId}:tones`)
     actions.mainKeyboardMenu(ctx);
@@ -67,25 +67,9 @@ bot.on("text", async (ctx)=> {
     const tone = await client.get(`user:${userId}:tones`)
 
     if (action) {
-        ctx.reply("Your request is on processing😊")
-
-        if (action == "gpt3.5-turbo") {
-            const response = await axios.get(`${apiUrl}&action=${action}&q=` + encodeURIComponent(userText));
-            ctx.reply(response.data.result[0])
-        } else if (action == "gpt4o") {
-            const response = await axios.get(`${apiUrl}&action=${action}&q=` + encodeURIComponent(userText) + `tones=${tone}`);
-            ctx.reply(response.data.result[0])
-        } else if (action == "copilot") {
-            const response = await axios.get(`${apiUrl}&action=${action}&q=` + encodeURIComponent(userText) + `tones=${tone}`);
-            ctx.reply(response.data.result[0].message)
-        }
-
-        ctx.reply("Your request has been successfully processed !🌿",
-            Markup.keyboard([
-                Markup.button.callback("End Chat"),
-                Markup.button.callback("Continue")]
-            ))
+        await actions.processRequest(ctx,apiUrl,userText,action,tone,dbAction)
     }
+
     else {
         actions.mainKeyboardMenu(ctx);
     }

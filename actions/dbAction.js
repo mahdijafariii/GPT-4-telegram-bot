@@ -20,7 +20,16 @@ const registerUser = (chatId, name) => {
             connection.query(`INSERT INTO users SET chatId = ?, name = ?`, [chatId, name]);
         }
     })
-
 }
 
-module.exports = {registerUser}
+const incRequestCount = (chatId) => {
+    connection.query(`SELECT * FROM users WHERE chatId = ?`,[chatId],function(err ,result){
+        if(result.length){
+            const user= result[0];
+            console.log(user)
+            connection.query(`UPDATE users SET freeCount = ? WHERE chatId = ?`, [(user.freeCount + 1), chatId]);
+        }
+    })
+}
+
+module.exports = {registerUser , incRequestCount}
