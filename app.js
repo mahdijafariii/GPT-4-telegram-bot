@@ -6,13 +6,13 @@ const redis = require("redis")
 const apiUrl = `https://one-api.ir/chatgpt/?token=${apiToken}`
 const client = redis.createClient();
 client.connect();
+
+const actions = require("./actions/action")
+const dbAction = require("./actions/dbAction")
+
 bot.start((ctx)=>{
-    ctx.reply("welcome to my bot dear ! " ,
-        Markup.inlineKeyboard([[
-            Markup.button.callback("3.5 Turbo", "Turbo"),
-            Markup.button.callback("GPT 4", "GPT4")],
-            [Markup.button.callback("Copilot","copilot")]
-        ]))
+    dbAction.registerUser(ctx.chat.id , ctx.chat.first_name)
+    actions.mainKeyboardMenu(ctx);
 });
 bot.action("Turbo",(ctx)=>{
     client.set("user:"+ctx.chat.id+":action" , "gpt3.5-turbo")
@@ -53,13 +53,7 @@ bot.hears("End Chat",(ctx)=>{
     ctx.reply("I hope it was a good experience for you💓")
     client.del(`user:${userId}:action`)
     client.del(`user:${userId}:tones`)
-    ctx.reply("welcome to my bot dear ! " ,
-        Markup.inlineKeyboard([[
-            Markup.button.callback("3.5 Turbo", "Turbo"),
-            Markup.button.callback("GPT 4", "GPT4")],
-            [Markup.button.callback("Copilot","copilot")]
-        ]))
-
+    actions.mainKeyboardMenu(ctx);
 })
 bot.hears("Continue",(ctx)=>{
     Markup.removeKeyboard();
@@ -93,12 +87,7 @@ bot.on("text", async (ctx)=> {
             ))
     }
     else {
-        ctx.reply("welcome to my bot dear ! " ,
-            Markup.inlineKeyboard([[
-                Markup.button.callback("3.5 Turbo", "Turbo"),
-                Markup.button.callback("GPT 4", "GPT4")],
-                [Markup.button.callback("Copilot","copilot")]
-            ]))
+        actions.mainKeyboardMenu(ctx);
     }
 })
 
