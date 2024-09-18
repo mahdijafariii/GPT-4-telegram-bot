@@ -48,6 +48,17 @@ bot.action("copilot", (ctx) => {
             Markup.button.callback("balanced", "balanced"),
         ]))
 })
+
+bot.action("vip",(ctx)=>{
+    const chatId = ctx.chat.id;
+    ctx.editMessageText("For user this bot you can choose plan and buy it! " ,
+        Markup.inlineKeyboard([[
+            Markup.button.callback("Buy 3.5 Turbo", "plan_Turbo"),
+            Markup.button.callback("Buy GPT 4", "plan_GPT4")],
+            [Markup.button.callback("Buy Copilot","plan_copilot")],
+            [Markup.button.callback("Buy All engine🌿","plan_vip")]
+        ]))
+})
 bot.hears("End Chat", (ctx) => {
     const userId = ctx.chat.id
     ctx.reply("I hope it was a good experience for you💓",Markup.removeKeyboard())

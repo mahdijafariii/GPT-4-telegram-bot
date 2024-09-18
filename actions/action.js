@@ -4,9 +4,9 @@ const axios = require("axios");
 const mainKeyboardMenu = (ctx)=>{
     ctx.reply("welcome to my bot dear ! " ,
         Markup.inlineKeyboard([[
-            Markup.button.callback("3.5 Turbo", "Turbo"),
-            Markup.button.callback("GPT 4", "GPT4")],
-            [Markup.button.callback("Copilot","copilot")]
+            Markup.button.callback("3.5 Turbo", "Turbo"),Markup.button.callback("GPT 4", "GPT4")],
+            [Markup.button.callback("Copilot","copilot"),Markup.button.callback("Buy VIP🌿","vip")],
+
         ]))
 }
 
