@@ -1,6 +1,6 @@
 const {Telegraf, Markup} = require("telegraf");
-const bot = new Telegraf("7463854933:AAHuAacVYJwHSC0wyXIiY1pO8vndd0kB_HE");
-const apiToken = "156190:66a7dae19e627";
+const bot = new Telegraf("");
+const apiToken = "";
 const axios = require("axios")
 const knex = require("./config/db")
 const redis = require("redis")
