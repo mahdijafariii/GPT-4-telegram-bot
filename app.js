@@ -10,6 +10,7 @@ client.connect();
 
 const actions = require("./actions/action")
 const dbAction = require("./actions/dbAction")
+const {checkVipAccess} = require("./actions/dbAction");
 
 bot.start(async (ctx) => {
     const payload = ctx.payload;
@@ -33,6 +34,7 @@ bot.start(async (ctx) => {
         else {
             ctx.reply("Invalid Operation !👎🏻")
         }
+        actions.mainKeyboardMenu(ctx);
     }
 
 });
@@ -84,14 +86,12 @@ bot.action("vip", (ctx) => {
 bot.action("confirm_payment", async (ctx) => {
     const user = await knex("users").where({chatId: ctx.chat.id}).first();
     const lastOrder = await knex('orders').where({user_id: user.id}).orderBy("id", "DESC").first()
-    console.log(lastOrder.amount,lastOrder.id)
     const request = await axios.post("https://gateway.zibal.ir/v1/request", {
         merchant: "zibal",
         amount: (lastOrder.amount * 10),
         callbackUrl: `https://t.me/chatgpt4mahdi_bot?start=${lastOrder.id}`,
         orderId: lastOrder.id
     })
-    console.log(request.data.trackId)
     const updateOrderId =await knex("orders").update({trackId : request.data.trackId}).where({user_id : user.id}).orderBy("id" , "DESC").limit(1);
     ctx.editMessageText("Click the payment button go to payment link 💵",
         Markup.inlineKeyboard([
@@ -150,14 +150,49 @@ bot.on("text", async (ctx) => {
     const userId = ctx.chat.id;
     const action = await client.get(`user:${userId}:action`)
     const tone = await client.get(`user:${userId}:tones`)
+    const user = await dbAction.getUser(ctx.chat.id);
+    let checkAccess = false
 
     if (action) {
         const freeCount = await dbAction.getFreeCount(ctx.chat.id);
-        if (freeCount >= 5) {
-            ctx.reply("You can not use chat Gpt for free anymore ! you should buy vip.🍂", Markup.removeKeyboard())
-        } else {
+
+
+        const checkVip = await dbAction.checkVipAccess(user.id);
+        let plan ;
+        switch (action){
+            case "gpt3.5-turbo":
+                plan = action.substring(7);
+                break
+            case "gpt4o":
+                plan = "GPT4";
+                break
+            case "copilot":
+                plan = "copilot";
+                break
+        }
+        const getPlan = await dbAction.checkOtherPlan(user.id,plan);
+        if (checkVip && checkVip.length > 0){
+            checkAccess = true
+        }
+        else if (getPlan && getPlan.length > 0){
+            checkAccess = true;
+        }
+        else {
+            if (freeCount >= 5) {
+                ctx.reply("You can not use chat Gpt for free anymore ! you should buy vip.🍂", Markup.removeKeyboard())
+            }
+            else {
+                await dbAction.incRequestCount(ctx.chat.id);
+                checkAccess = true;
+            }
+
+        }
+        if(checkAccess)
+        {
             await actions.processRequest(ctx, apiUrl, userText, action, tone)
-            dbAction.incRequestCount(ctx.chat.id);
+        }
+        else{
+            actions.mainKeyboardMenu(ctx);
         }
 
     } else {

@@ -23,4 +23,31 @@ const getFreeCount = async (chatId) => {
     return user.freeCount;
 }
 
-module.exports = {registerUser , incRequestCount, getFreeCount}
+const getUser = async (chatId) => {
+    const user = await knex("users").where({chatId : chatId}).first()
+    return user;
+}
+
+const checkVipAccess = async (user_Id)=>{
+    const timeNow = Math.floor(Date.now() / 1000)
+    const checkVip = await knex("orders")
+        .whereRaw(`(started_at <= ? AND ? <= ended_at) AND plan = ? AND user_id = ?`,
+            [timeNow, timeNow, 'vip', user_Id])
+        .limit(1);
+
+    console.log(checkVip)
+    return checkVip;
+}
+
+const checkOtherPlan = async (user_Id,plan)=>{
+    const timeNow = Math.floor(Date.now() / 1000)
+    const checkPlan = await knex("orders")
+        .whereRaw(`(started_at <= ? AND ? <= ended_at) AND plan = ? AND user_id = ?`,
+            [timeNow, timeNow, plan, user_Id])
+        .limit(1);
+    console.log(checkPlan)
+    return checkPlan;
+}
+
+
+module.exports = {registerUser , incRequestCount, getFreeCount, checkVipAccess , checkOtherPlan, getUser}
