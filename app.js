@@ -11,9 +11,30 @@ client.connect();
 const actions = require("./actions/action")
 const dbAction = require("./actions/dbAction")
 
-bot.start((ctx) => {
-    dbAction.registerUser(ctx.chat.id, ctx.chat.first_name)
-    actions.mainKeyboardMenu(ctx);
+bot.start(async (ctx) => {
+    const payload = ctx.payload;
+    if (!payload.length){
+        dbAction.registerUser(ctx.chat.id, ctx.chat.first_name)
+        actions.mainKeyboardMenu(ctx);
+    }
+    else{
+        const order = await knex("orders").where({id : payload}).first()
+        const request = await axios.post("https://gateway.zibal.ir/v1/verify", {
+            merchant: "zibal",
+            trackId : order.trackId
+        })
+
+        if(request.data.result === 100){
+            const nowTime = Math.floor(Date.now() / 1000);
+            const endTime = nowTime + (order.period_plan * 24*60*60);
+            const updateOrderId =await knex("orders").update({status : "done",started_at : nowTime, ended_at : endTime }).where({id : payload});
+            ctx.reply("Nice ،Your purchase was successful💓")
+        }
+        else {
+            ctx.reply("Invalid Operation !👎🏻")
+        }
+    }
+
 });
 bot.action("Turbo", (ctx) => {
     client.set("user:" + ctx.chat.id + ":action", "gpt3.5-turbo")
@@ -67,9 +88,11 @@ bot.action("confirm_payment", async (ctx) => {
     const request = await axios.post("https://gateway.zibal.ir/v1/request", {
         merchant: "zibal",
         amount: (lastOrder.amount * 10),
-        callbackUrl: "http://localhost:3030",
+        callbackUrl: `https://t.me/chatgpt4mahdi_bot?start=${lastOrder.id}`,
         orderId: lastOrder.id
     })
+    console.log(request.data.trackId)
+    const updateOrderId =await knex("orders").update({trackId : request.data.trackId}).where({user_id : user.id}).orderBy("id" , "DESC").limit(1);
     ctx.editMessageText("Click the payment button go to payment link 💵",
         Markup.inlineKeyboard([
             Markup.button.url(`Go To Payment Link ! `, `https://gateway.zibal.ir/start/${request.data.trackId}`),
